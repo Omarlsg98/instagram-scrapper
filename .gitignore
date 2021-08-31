@@ -1,6 +1,6 @@
 secret_config.py
 .idea/
-driver/
+driver/chromedriver.exe
 data/
 
 
