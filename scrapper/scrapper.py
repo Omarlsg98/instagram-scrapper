@@ -5,7 +5,8 @@ import pandas as pd
 
 from common.selenium_basics import get_driver, login, scroll, check_two_outputs, wait_element_by_xpath, \
     closing_routine
-from config import FULL_POST_DUMP, INSTAGRAM_URL
+from config import FULL_POST_DUMP, INSTAGRAM_URL, EXTRACT_CONFIG, \
+    POST_LINKS_CONFIG
 from secret_config import username_to_scrape
 
 data_dir = "../data"
@@ -31,18 +32,29 @@ def get_info_from_post(dr, number):
 
 
 def get_post_links(dr, act_username):
+    max_posts = POST_LINKS_CONFIG["first_n_posts"]
+
     total_posts = int(dr.find_element_by_xpath("//li/span/span").text)
     links = set()
-    while total_posts > len(links):
+    continue_scrolling = True
+    while total_posts > len(links) and continue_scrolling:
         posts = dr.find_elements_by_xpath("//a[contains(@href,'/p/')]")
         for i, post in enumerate(posts):
             link = post.get_attribute("href")
-            links.add(link)
+            if len(links) < max_posts:
+                links.add(link)
+            else:
+                continue_scrolling = False
+                break
+
         scroll(dr, True, 1)
         logging.info(f"{len(links)} links found out of {total_posts}")
+
     logging.info("All links collected successfully")
-    pd.DataFrame(list(links), columns=["link"]) \
-        .to_csv(f"{temp_dir}/{act_username}_post_links.csv", index=False)
+    links_df = pd.DataFrame(list(links), columns=["link"])
+    links_df["username"] = act_username
+    links_df["id"] = links_df["links"]
+    links_df.to_csv(f"{temp_dir}/post_links.csv", index=False)
     logging.info("Post links saved")
 
 
@@ -131,13 +143,31 @@ def get_from_followers(dr, followers_of_username, extract_list: list):
         # TODO: parallel execution tabs!
 
 
-if __name__ == "__main__":
+def get_extract_list_from_config(extract_dict: dict):
+    extract_list = [key for key, value in extract_dict.items() if value]
+    return extract_list
+
+
+def main():
     driver = get_driver()
+
     try:
         login(driver)
-        # go_to_profile(driver, username_to_scrape, ['post_links', 'followers_list'])
-        get_from_followers(driver, username_to_scrape, ['followers_list', 'following_list'])
+
+        if EXTRACT_CONFIG["from_profile"]["enabled"]:
+            extract_list_ = get_extract_list_from_config(EXTRACT_CONFIG["from_profile"]["extract"])
+            go_to_profile(driver, username_to_scrape, extract_list_)
+
+        if EXTRACT_CONFIG["from_followers"]["enabled"]:
+            extract_list_ = get_extract_list_from_config(EXTRACT_CONFIG["from_followers"]["extract"])
+            get_from_followers(driver, username_to_scrape, extract_list_)
+
         # TODO: Extract from posts
 
+        logging.info(f"SUCCESSFUL execution, all the scrapping jobs were done")
     finally:
         closing_routine(driver)
+
+
+if __name__ == "__main__":
+    main()
