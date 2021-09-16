@@ -2,8 +2,8 @@ secret_config.py
 .idea/
 driver/chromedriver.exe
 data/
-!data/*.gitkeep
-!data/*.template
+!data/temp/.gitkeep
+!data/input/*.template
 
 
 # Byte-compiled / optimized / DLL files
