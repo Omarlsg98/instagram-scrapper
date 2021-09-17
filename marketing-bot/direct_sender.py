@@ -7,7 +7,7 @@ from common.selenium_basics import get_driver, login, wait_element_by_xpath, \
 from common.utils import beautify_list
 
 from config import INSTAGRAM_URL
-from secret_config import username_to_scrape
+from secret_config import username
 
 data_dir = "../data"
 input_dir = f"{data_dir}/input"
@@ -65,6 +65,6 @@ if __name__ == "__main__":
     driver = get_driver()
     try:
         login(driver)
-        go_to_direct(driver, username_to_scrape, ["send_message_from_template"])
+        go_to_direct(driver, username, ["send_message_from_template"])
     finally:
         closing_routine(driver)

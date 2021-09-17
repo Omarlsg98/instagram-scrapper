@@ -4,28 +4,38 @@ TIMEOUT = 30  # in secs
 PING = 1  # in secs
 HEADLESS = False
 
-SECS_BEFORE_CLOSING = 7
+CLICKS_RETRIES = 3
+SECS_TO_RE_CLICK = 5
 
-FULL_POST_DUMP = True
+SECS_BEFORE_CLOSING = 5
 
 EXTRACT_CONFIG = {
-    "from_profile": {
+    "from_profiles": {
         "enabled": True,
         "extract": {
-            "post_links": True,
+            "post_links": {
+                "enabled": True,
+                "overwrite": True,
+                "first_n_posts": 2,
+            },
             "followers_list": False,
             "following_list": False,
-        }
+        },
     },
     "from_followers": {
         "enabled": False,
         "extract": {
             "followers_list": True,
             "following_list": True,
-        }
-    }
-}
-
-POST_LINKS_CONFIG = {
-    "first_n_posts": 5,
+        },
+    },
+    "from_post": {
+        "enabled": True,
+        "extract": {
+            "likes": {
+                "enabled": True,
+                "overwrite": True,
+            },
+        },
+    },
 }

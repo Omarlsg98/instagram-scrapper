@@ -7,7 +7,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 
 from secret_config import username, password
-from config import HEADLESS, TIMEOUT, PING, INSTAGRAM_URL, SECS_BEFORE_CLOSING
+from config import HEADLESS, TIMEOUT, PING, INSTAGRAM_URL, SECS_BEFORE_CLOSING, CLICKS_RETRIES, \
+    SECS_TO_RE_CLICK
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)s - #%(levelname)s - %(message)s')
@@ -39,16 +40,34 @@ def scroll(dr, down, intensity):
             body.send_keys(Keys.HOME)
 
 
-def wait_element_by_xpath(dr, xpath):
+def click_with_retries(dr, xpath_click, xpath_confirmation):
+    tries = 0
+    while tries < CLICKS_RETRIES:
+        element_to_click = dr.find_element_by_xpath(xpath_click)
+        element_to_click.click()
+        tries = tries + 1
+        if wait_element_by_xpath(dr, xpath_confirmation, False, SECS_TO_RE_CLICK):
+            return
+        else:
+            logging.info(f"Retrying click for xpath {xpath_click}. Try {tries} out of {CLICKS_RETRIES}")
+    logging.error(f"Element with xpath {xpath_confirmation} not found after {tries} clicks to {xpath_click}")
+    raise TimeoutError()
+
+
+def wait_element_by_xpath(dr, xpath, error_on_timeout=True, wait_time=TIMEOUT):
     secs_passed = 0
-    while secs_passed < TIMEOUT:
+    while secs_passed < wait_time:
         elements_found = dr.find_elements_by_xpath(xpath)
         if len(elements_found) > 0:
+            logging.debug(f"########### element found {xpath}")
             return elements_found[0]
         time.sleep(PING)
         secs_passed += PING
-    logging.error(f"Element with xpath {xpath} not found after {TIMEOUT} seconds")
-    raise TimeoutError()
+    if error_on_timeout:
+        logging.error(f"Element with xpath {xpath} not found after {wait_time} seconds")
+        raise TimeoutError()
+    else:
+        return False
 
 
 def wait_any_element_to_have_text(dr, xpath, text):
