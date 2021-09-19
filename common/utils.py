@@ -48,3 +48,22 @@ def append_write_pandas_csv(file_path, dataframe, overwrite=False, index=False):
 def delete_file(file_path):
     os.remove(file_path)
     logging.info(f"{file_path} removed successfully")
+
+
+def get_execution_list_from_config(extract_dict: dict, key_to_extract):
+    if key_to_extract != "":
+        prefix = key_to_extract + "/"
+        if extract_dict.get(key_to_extract):
+            extract_dict = extract_dict[key_to_extract]
+        else:
+            return []
+    else:
+        prefix = key_to_extract
+
+    extract_list = []
+    for key, value in extract_dict.items():
+        if value:
+            extract_list.append(prefix+key)
+        elif type(value) is dict and value.get("enabled"):
+            extract_list.append(prefix+key)
+    return extract_list

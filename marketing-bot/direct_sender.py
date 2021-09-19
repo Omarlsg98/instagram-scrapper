@@ -9,8 +9,7 @@ from common.utils import beautify_list
 from config import INSTAGRAM_URL
 from secret_config import username
 
-data_dir = "../data"
-input_dir = f"{data_dir}/input"
+import data
 
 
 def send_message(dr, to_username, message):
@@ -48,10 +47,10 @@ def go_to_direct(dr, act_username, action_list: list):
         not_allow_button.click()
 
     if 'send_message_from_template' in action_list:
-        with open(f"{input_dir}/message.txt", 'r') as temp:
+        with open(f"{data.input_dir}/message.txt", 'r') as temp:
             template = temp.read()
 
-        destinations = pd.read_csv(f"{input_dir}/send_message_to.csv")
+        destinations = pd.read_csv(f"{data.input_dir}/send_message_to.csv")
         total_destinations = len(destinations)
         for index, row in destinations.iterrows():
             destination = row['username']

@@ -2,6 +2,7 @@ secret_config.py
 .idea/
 driver/chromedriver.exe
 /data/
+!/data/__init__.py
 !/data/temp/.gitkeep
 !/data/input/*.template
 

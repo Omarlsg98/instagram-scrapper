@@ -1,4 +1,5 @@
 INSTAGRAM_URL = "https://www.instagram.com"
+INSTALLATION_DIR = "C:\\repos\\instagram-scrapper"
 
 TIMEOUT = 30  # in secs
 PING = 1  # in secs
@@ -9,9 +10,9 @@ SECS_TO_RE_CLICK = 5
 
 SECS_BEFORE_CLOSING = 5
 
-EXTRACT_CONFIG = {
+MASTER_CONFIG = {
     "from_profiles": {
-        "enabled": True,
+        "enabled": False,
         "extract": {
             "post_links": {
                 "enabled": True,
@@ -34,8 +35,11 @@ EXTRACT_CONFIG = {
         "extract": {
             "likes": {
                 "enabled": True,
-                "overwrite": True,
+                "overwrite": False,
             },
+        },
+        "follow": {
+            "likes": True,
         },
     },
 }
