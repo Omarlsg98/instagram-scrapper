@@ -4,50 +4,56 @@ import re
 import pandas as pd
 
 import data
+from common.instagram_context import InstagramContext
 from common.selenium_basics import scroll, check_two_outputs, wait_element_by_xpath
 from common.utils import safe_str_to_int, append_write_pandas_csv
 from config import INSTAGRAM_URL, MASTER_CONFIG
-from navigation.main_elements_navigation import UsersModalNavigator
+from navigation.user_modal_navigation import UsersModalNavigator
 
 
 class ProfilesNavigator:
 
-    def __init__(self, driver, file_with_users):
+    def __init__(self, driver, file_with_users, execute_list: list):
         self.driver = driver
         self.file_with_users = file_with_users
+        self.execute_list = execute_list
         self.execute_from_profile = {
             'extract/post_links': self.get_post_links,
             'extract/followers_list': self.get_users_list,
             'extract/following_list': self.get_followings_list,
         }
+        self.context = None
 
-    def get_from_profiles(self, file_with_users, execute_list: list):
-        users_list = pd.read_csv(file_with_users)
+    def get_from_profiles(self):
+        users_list = pd.read_csv(self.file_with_users)
         total_users = len(users_list)
-        logging.info(f"{total_users} followers found in {file_with_users}")
+        logging.info(f"{total_users} followers found in {self.file_with_users}")
 
         for index, row in users_list.iterrows():
             act_user = row['username']
             logging.info(f"Seeing user {index + 1} out of {total_users}: {act_user}")
-            self.go_to_profile(act_user, execute_list)
+            self.go_to_profile(act_user)
             # TODO: parallel execution tabs!
 
-    def go_to_profile(self, act_username, execute_list: list):
-        dr = self.driver
-        dr.get(f"{INSTAGRAM_URL}/{act_username}/")
-        wait_element_by_xpath(dr, f"//section/div/h2[text() = '{act_username}']")
+    def go_to_profile(self, act_username):
+        url = f"{INSTAGRAM_URL}/{act_username}/"
+        wait_xpath = f"//section/div/h2[text() = '{act_username}']"
 
-        for to_do in execute_list:
+        self.context = InstagramContext(name=act_username, url=url, wait_xpath=wait_xpath)
+        self.context.go_there(self.driver)
+
+        for to_do in self.execute_list:
             logging.info(f"Doing: {to_do} from {act_username}...")
             exec_func = self.execute_from_profile[to_do]
-            exec_func(act_username)
+            exec_func()
             # TODO: SAVE PROGRESS
 
-    def get_post_links(self, act_username):
+    def get_post_links(self):
         dr = self.driver
+        act_username = self.context.name
         posts_config = MASTER_CONFIG["from_profiles"]["extract"]["post_links"]
         max_posts = posts_config["first_n_posts"]
-
+        # TODO: ignore videos/igtv posts
         total_posts = int(dr.find_element_by_xpath("//li/span/span").text)
         links = set()
         continue_scrolling = True
@@ -72,8 +78,9 @@ class ProfilesNavigator:
         append_write_pandas_csv(f"{data.temp_dir}/post_links.csv", links_df, posts_config["overwrite"])
         logging.info("Post links saved")
 
-    def get_users_list(self, act_username, get_followers=True):
+    def get_users_list(self, get_followers=True):
         dr = self.driver
+        act_username = self.context.name
         scroll(dr, False, 2)
         is_public, _ = check_two_outputs(dr,
                                          "//div[@role='tablist']",
@@ -86,14 +93,16 @@ class ProfilesNavigator:
                 to_collect = "following"
                 modal_xpath = "//div[contains(@aria-label,'Following')]/div/div[@class and not(@role)]"
 
-            element = dr.find_element_by_xpath(f"//a[contains(@href,'{to_collect}')]/span")
+            click_xpath = f"//a[contains(@href,'{to_collect}')]/span"
+            element = dr.find_element_by_xpath(click_xpath)
             total_users = safe_str_to_int(element.text)
 
             element.click()
             wait_element_by_xpath(dr, modal_xpath)
 
-            modal_navigator = UsersModalNavigator(dr, modal_xpath, to_collect, act_username)
-            users = modal_navigator.get_users(total_users)
+            modal_context = self.context.clone(click_xpath=click_xpath, wait_xpath=modal_xpath)
+            modal_navigator = UsersModalNavigator(dr, modal_xpath, to_collect, modal_context, total_users)
+            users = modal_navigator.get_users()
 
             users_pd = pd.DataFrame(list(users), columns=["username"])
             users_pd.to_csv(f"{data.temp_dir}/{act_username}_{to_collect}_usernames.csv", index=False)
@@ -104,5 +113,5 @@ class ProfilesNavigator:
 
         dr.find_element_by_xpath("//*[@aria-label='Close']").click()
 
-    def get_followings_list(self, act_username):
-        self.get_users_list(act_username, get_followers=False)
+    def get_followings_list(self):
+        self.get_users_list(get_followers=False)

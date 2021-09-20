@@ -6,11 +6,13 @@ from config import MASTER_CONFIG
 from navigation.post_navigation import PostsNavigator
 
 
-def main():
-    driver = get_driver()
+def follow(driver=None, logged=False):
+    if not driver:
+        driver = get_driver()
 
     try:
-        login(driver)
+        if not logged:
+            login(driver)
 
         jobs = get_execution_list_from_config(MASTER_CONFIG, "")
         for job in jobs:
@@ -28,4 +30,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    follow()

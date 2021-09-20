@@ -1,7 +1,12 @@
+import random
+import time
+
 import pandas as pd
 import os
 import os.path as path
 import logging
+
+from config import SECS_RANGE_FOR_CLICKS
 
 
 def beautify_list(list_: list) -> str:
@@ -30,7 +35,7 @@ writes_memory = {}
 def append_write_pandas_csv(file_path, dataframe, overwrite=False, index=False):
     global writes_memory
     if writes_memory.get(file_path):
-        writes_memory[file_path] = writes_memory[file_path]+1
+        writes_memory[file_path] = writes_memory[file_path] + 1
     else:
         writes_memory[file_path] = 1
         if overwrite:
@@ -45,9 +50,26 @@ def append_write_pandas_csv(file_path, dataframe, overwrite=False, index=False):
     dataframe.to_csv(file_path, index=index, mode=mode, header=header)
 
 
+def create_csv_headers(file_path, headers):
+    if not path.isfile(file_path):
+        with open(file_path, 'w') as fd:
+            fd.write(headers)
+
+
+def append_to_csv(file_path, data, verbose):
+    with open(file_path, 'a') as fd:
+        fd.write(f"\n{data}")
+        if verbose:
+            logging.info(f"Data appended to {file_path}")
+
+
 def delete_file(file_path):
     os.remove(file_path)
     logging.info(f"{file_path} removed successfully")
+
+
+def sleep_random(range_secs_to_sleep: (float, float) = SECS_RANGE_FOR_CLICKS):
+    time.sleep(random.uniform(*range_secs_to_sleep))
 
 
 def get_execution_list_from_config(extract_dict: dict, key_to_extract):
@@ -63,7 +85,7 @@ def get_execution_list_from_config(extract_dict: dict, key_to_extract):
     extract_list = []
     for key, value in extract_dict.items():
         if value:
-            extract_list.append(prefix+key)
+            extract_list.append(prefix + key)
         elif type(value) is dict and value.get("enabled"):
-            extract_list.append(prefix+key)
+            extract_list.append(prefix + key)
     return extract_list

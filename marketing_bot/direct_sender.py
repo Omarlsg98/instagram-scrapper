@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 
 from common.selenium_basics import get_driver, login, wait_element_by_xpath, \
-    closing_routine, write_text, wait_any_element_to_have_text
+    closing_routine, write_text, wait_any_element_to_have_text, skip_notifications_dialog
 from common.utils import beautify_list
 
 from config import INSTAGRAM_URL
@@ -41,10 +41,7 @@ def go_to_direct(dr, act_username, action_list: list):
     dr.get(f"{INSTAGRAM_URL}/direct/inbox/")
     wait_element_by_xpath(dr, "//*[@aria-label='New Message']")
 
-    allow_notification_popup = dr.find_elements_by_xpath("//body[contains(@style, 'over')]")
-    if allow_notification_popup:
-        not_allow_button = dr.find_element_by_xpath("//button[contains(@class,'aOOlW   HoLwm')]")
-        not_allow_button.click()
+    skip_notifications_dialog(dr)
 
     if 'send_message_from_template' in action_list:
         with open(f"{data.input_dir}/message.txt", 'r') as temp:

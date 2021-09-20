@@ -7,8 +7,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 
 from secret_config import username, password
-from config import HEADLESS, TIMEOUT, PING, INSTAGRAM_URL, SECS_BEFORE_CLOSING, CLICKS_RETRIES, \
-    SECS_TO_RE_CLICK
+from config import HEADLESS, TIMEOUT, PING, INSTAGRAM_URL, SECS_BEFORE_CLOSING, MAX_RETRIES, \
+    SECS_TO_RE_CLICK, INSTALLATION_DIR
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)s - #%(levelname)s - %(message)s')
@@ -33,23 +33,25 @@ def scroll(dr, down, intensity):
             body.send_keys(Keys.PAGE_DOWN)
         else:
             body.send_keys(Keys.PAGE_UP)
-    else:
+    elif intensity == 2:
         if down:
             body.send_keys(Keys.END)
         else:
             body.send_keys(Keys.HOME)
+    else:
+        raise Exception("Invalid intensity")
 
 
 def click_with_retries(dr, xpath_click, xpath_confirmation):
     tries = 0
-    while tries < CLICKS_RETRIES:
+    while tries < MAX_RETRIES:
         element_to_click = dr.find_element_by_xpath(xpath_click)
         element_to_click.click()
         tries = tries + 1
         if wait_element_by_xpath(dr, xpath_confirmation, False, SECS_TO_RE_CLICK):
             return
         else:
-            logging.info(f"Retrying click for xpath {xpath_click}. Try {tries} out of {CLICKS_RETRIES}")
+            logging.info(f"Retrying click for xpath {xpath_click}. Try {tries} out of {MAX_RETRIES}")
     logging.error(f"Element with xpath {xpath_confirmation} not found after {tries} clicks to {xpath_click}")
     raise TimeoutError()
 
@@ -110,7 +112,7 @@ def get_driver() -> webdriver:
     if HEADLESS:
         opts.add_argument("--headless")
     opts.add_argument("--start-maximized")
-    driver_ = webdriver.Chrome("../driver/chromedriver.exe",
+    driver_ = webdriver.Chrome(f"{INSTALLATION_DIR}/driver/chromedriver.exe",
                                options=opts)
     return driver_
 
@@ -130,6 +132,15 @@ def login(dr):
     else:
         logging.error(f"Login error: {elements[0].text}")
         raise Exception()
+
+
+def skip_notifications_dialog(dr):
+    notifications_dialog = dr.find_elements_by_xpath("//div[@role='dialog']")
+    if notifications_dialog:
+        buttons = notifications_dialog[0].find_elements_by_xpath(".//button")
+        for button in buttons:
+            if button.text == "Not Now":
+                button.click()
 
 
 def closing_routine(dr):
