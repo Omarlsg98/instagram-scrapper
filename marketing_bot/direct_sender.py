@@ -3,10 +3,10 @@ import logging
 import pandas as pd
 
 from common.selenium_basics import get_driver, login, wait_element_by_xpath, \
-    closing_routine, write_text, wait_any_element_to_have_text, skip_notifications_dialog
-from common.utils import beautify_list
+     write_text, wait_any_element_to_have_text, skip_notifications_dialog
+from common.utils import beautify_list, get_execution_list_from_config
 
-from config import INSTAGRAM_URL
+from config import INSTAGRAM_URL, MASTER_CONFIG
 from secret_config import username
 
 import data
@@ -57,10 +57,19 @@ def go_to_direct(dr, act_username, action_list: list):
             send_message_from_template(dr, template, destination, likes)
 
 
-if __name__ == "__main__":
-    driver = get_driver()
-    try:
+def direct_sender(driver=None, logged=False):
+    if not driver:
+        driver = get_driver()
+
+    if not logged:
         login(driver)
+
+    if "send_message_from_template" in get_execution_list_from_config(MASTER_CONFIG, ""):
         go_to_direct(driver, username, ["send_message_from_template"])
-    finally:
-        closing_routine(driver)
+        logging.info("All message sent SUCCESSFULLY")
+    else:
+        logging.info("Send messages from template option disabled!")
+
+
+if __name__ == "__main__":
+    direct_sender()

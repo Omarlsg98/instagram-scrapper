@@ -9,8 +9,8 @@ PING = 1  # in secs
 MAX_RETRIES = 3
 SECS_TO_RE_CLICK = 5
 
-SECS_RANGE_FOR_CLICKS = (0.7, 1.5)
-SECS_RANGE_TO_BEHAVE_LIKE_HUMAN = (50, 70)
+SECS_RANGE_FOR_CLICKS = (0.7, 2)
+SECS_RANGE_TO_BEHAVE_LIKE_HUMAN = (70, 120)
 
 SECS_BEFORE_CLOSING = 5
 
@@ -21,7 +21,7 @@ MASTER_CONFIG = {
             "post_links": {
                 "enabled": True,
                 "overwrite": True,
-                "first_n_posts": 4,
+                "first_n_posts": 5,
             },
             "followers_list": False,
             "following_list": False,
@@ -38,7 +38,7 @@ MASTER_CONFIG = {
         "enabled": True,
         "extract": {
             "likes": {
-                "enabled": True,
+                "enabled": False,
                 "overwrite": False,
             },
         },
@@ -46,4 +46,7 @@ MASTER_CONFIG = {
             "likes": True,
         },
     },
+    "send_message_from_template": {
+        "enabled": False,
+    }
 }

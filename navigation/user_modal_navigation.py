@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 
 import data
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, ElementClickInterceptedException
 from common.selenium_basics import scroll, wait_element_by_xpath
 from common.utils import append_to_csv, sleep_random
 from common.instagram_context import InstagramContext
@@ -73,7 +73,7 @@ class UsersModalNavigator:
         try:
             follow_buttons = self.driver.find_elements_by_xpath(f"{self.modal_xpath}//button")
             for button in follow_buttons:
-                if button.text == "Follow":
+                if button.text == "Follow":     # FIXME!
                     row_element = button.find_element_by_xpath("./../..")
                     username = row_element.find_element_by_xpath(".//a[@title]").get_attribute("title")
 
@@ -89,8 +89,11 @@ class UsersModalNavigator:
                 time.sleep(0.3)
                 self.click_follow_users(try_n+1)
             else:
-                logging.error('Stale Element found 3 consecutive times, omitting error and continuing process')
-                scroll(self.driver, down=False, intensity=2)
+                logging.error('Stale Element found 3 consecutive times, taking a break')
+                self.take_a_break()
+        except ElementClickInterceptedException:
+            logging.warning(f"ElementClickInterceptedException found. Reloading modal")
+            self.context.go_there(self.driver)
 
     def check_users_followed(self, try_n=0):
         try:
@@ -108,7 +111,7 @@ class UsersModalNavigator:
                     else:
                         logging.warning(f"User {username} could not be followed")
                         failed_follows += 1
-                        if failed_follows > 5:
+                        if failed_follows > 3:
                             self.take_a_break()
             self.confirm_follow = set()
         except StaleElementReferenceException:

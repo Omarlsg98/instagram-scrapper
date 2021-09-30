@@ -24,7 +24,7 @@ class HomeNavigator:
 
         for_n_secs = for_n_secs if for_n_secs else random.uniform(*SECS_RANGE_TO_BEHAVE_LIKE_HUMAN)
         time_passed = 0
-        logging.info(f"Behaving like a human for {for_n_secs} secs to avoid instagram bot detection ...")
+        logging.info(f"Behaving like a human for {int(for_n_secs)} secs to avoid instagram bot detection ...")
         while time_passed < for_n_secs:
             sleep_random((1, 5))
             rand_dir = random.random() < 0.93

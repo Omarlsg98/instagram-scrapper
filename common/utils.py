@@ -84,8 +84,8 @@ def get_execution_list_from_config(extract_dict: dict, key_to_extract):
 
     extract_list = []
     for key, value in extract_dict.items():
-        if value:
+        if type(value) is dict and value.get("enabled"):
             extract_list.append(prefix + key)
-        elif type(value) is dict and value.get("enabled"):
+        elif type(value) is not dict and value:
             extract_list.append(prefix + key)
     return extract_list

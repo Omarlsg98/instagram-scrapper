@@ -54,7 +54,7 @@ class ProfilesNavigator:
         posts_config = MASTER_CONFIG["from_profiles"]["extract"]["post_links"]
         max_posts = posts_config["first_n_posts"]
         # TODO: ignore videos/igtv posts
-        total_posts = int(dr.find_element_by_xpath("//li/span/span").text)
+        total_posts = safe_str_to_int(dr.find_element_by_xpath("//li/span/span").text)
         links = set()
         continue_scrolling = True
         while total_posts > len(links) and continue_scrolling:
